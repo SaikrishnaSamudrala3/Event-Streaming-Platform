@@ -2,8 +2,9 @@
 
 ## 1. Purpose
 
-This document describes the planned Kafka event envelope. The Java classes and
-JSON serialization tests will become the executable form of this contract.
+This document describes the Kafka event envelope. The Java records in
+`common-events` and their JSON serialization tests are the executable form of
+this contract.
 
 ## 2. Topic contract
 
@@ -39,60 +40,75 @@ endpoint.
 
 ### `ORDER_CREATED`
 
-Planned payload concepts:
-
-- customer reference using synthetic data
-- currency
-- total amount
-- item summary
+| Field | Type | Required | Rule |
+|---|---|---|---|
+| `customerReference` | String | Yes | Safe synthetic identifier, maximum 100 characters |
+| `currency` | String | Yes | Three-letter uppercase ISO 4217 code |
+| `totalAmount` | Decimal | Yes | Greater than zero, maximum two decimal places |
+| `itemCount` | Integer | Yes | Greater than zero |
 
 ### `PAYMENT_COMPLETED`
 
-Planned payload concepts:
-
-- synthetic payment reference
-- amount
-- currency
-- completion timestamp
+| Field | Type | Required | Rule |
+|---|---|---|---|
+| `paymentReference` | String | Yes | Safe synthetic identifier, maximum 100 characters |
+| `amount` | Decimal | Yes | Greater than zero, maximum two decimal places |
+| `currency` | String | Yes | Three-letter uppercase ISO 4217 code |
+| `completedAt` | UTC date-time | Yes | ISO 8601 string |
 
 No card number, CVV, bank credential, or real payment secret is permitted.
 
 ### `PAYMENT_FAILED`
 
-Planned payload concepts:
+| Field | Type | Required | Rule |
+|---|---|---|---|
+| `paymentReference` | String | Yes | Safe synthetic identifier, maximum 100 characters |
+| `failureReason` | Enum | Yes | One of the safe categories listed below |
+| `failedAt` | UTC date-time | Yes | ISO 8601 string |
 
-- synthetic payment reference
-- safe failure category
-- failure timestamp
+Safe failure categories:
+
+- `DECLINED`
+- `INSUFFICIENT_FUNDS`
+- `EXPIRED_PAYMENT_METHOD`
+- `PROCESSOR_UNAVAILABLE`
+- `VALIDATION_ERROR`
+- `UNKNOWN`
 
 ### `ORDER_CANCELLED`
 
-Planned payload concepts:
-
-- safe cancellation reason
-- cancellation timestamp
+| Field | Type | Required | Rule |
+|---|---|---|---|
+| `reason` | String | Yes | Nonblank safe explanation, maximum 250 characters |
+| `cancelledAt` | UTC date-time | Yes | ISO 8601 string |
 
 ### `ORDER_SHIPPED`
 
-Planned payload concepts:
+| Field | Type | Required | Rule |
+|---|---|---|---|
+| `shipmentReference` | String | Yes | Safe synthetic identifier, maximum 100 characters |
+| `carrier` | String | Yes | Nonblank carrier name, maximum 100 characters |
+| `shippedAt` | UTC date-time | Yes | ISO 8601 string |
 
-- synthetic shipment reference
-- carrier name
-- shipment timestamp
-
-The exact per-type payload schemas will be finalized before Phase 2 is marked
-complete. Until then, the OpenAPI contract intentionally represents `payload`
-as an object.
+Identifier fields begin with a letter or number and may contain letters,
+numbers, dots, underscores, and hyphens. Payloads are immutable Java records
+and identify their matching event type. The event envelope rejects a payload
+whose type does not match its `eventType`.
 
 ## 5. Versioning
 
 - `eventVersion` begins at `1`.
+- The `common-events` module currently supports version `1` only.
 - Additive, optional fields may remain in the same version when consumers are
   tolerant of unknown fields.
 - Removing, renaming, changing meaning, or changing a field type requires a
   versioning decision.
 - Consumers should reject or dead-letter versions they cannot safely process.
 - Topic version and event schema version are related but not interchangeable.
+
+The envelope and payload records ignore unknown JSON properties so a version
+1 consumer can tolerate compatible additive fields. A newly required field is
+not an additive compatible change.
 
 ## 6. Idempotency
 
@@ -106,6 +122,8 @@ as an object.
 ## 7. Time rules
 
 - All timestamps use ISO 8601 with a UTC offset.
+- Java represents contract timestamps as `Instant`, and JSON emits them as
+  strings such as `2026-07-25T18:30:00Z`.
 - `occurredAt` represents business occurrence time.
 - Ingestion time is recorded by the platform.
 - Processing time is recorded by the consumer.

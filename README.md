@@ -6,7 +6,7 @@ plan and API contract. Application code will be added incrementally.
 
 ## Project status
 
-**Current phase:** Phase 1 complete — Maven foundation
+**Current phase:** Phase 2 complete on `phase/02-common-event-contract`
 
 Nothing in the OpenAPI document should be treated as implemented until the
 corresponding milestone is marked complete in the project plan.
@@ -41,6 +41,10 @@ dependencies. Later builds reuse the local Maven cache.
 At Phase 1 the modules are intentionally empty. A successful build verifies
 the parent-child POM relationships, pinned tool versions, and Maven reactor
 order; it does not yet produce runnable Spring Boot services.
+
+The `common-events` module now contains the version 1 immutable order-event
+envelope, five typed payloads, validation rules, and JSON contract tests.
+The two Spring Boot service modules remain intentionally empty.
 
 ## Maven modules
 

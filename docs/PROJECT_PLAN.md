@@ -178,12 +178,24 @@ Exit criteria:
 
 ### Phase 2 — Shared event contract
 
+Status: **Complete**
+
 Planned files:
 
 - `OrderEvent`
 - `OrderEventType`
 - payload models
 - serialization tests
+
+Implemented additions:
+
+- sealed payload contract
+- contract version helper
+- shared contract validation
+- typed payloads for all five order event types
+- safe payment failure categories
+- JSON shape, compatibility, and validation tests
+- synchronized OpenAPI payload schemas
 
 Exit criteria:
 

@@ -199,6 +199,9 @@ demonstration environment.
 | ADR-010 | Target Java 21 | Accepted | Uses an LTS runtime target that is portable across local and cloud environments |
 | ADR-011 | Use Spring Boot 4.1.0 | Accepted | Pins the current stable Spring Boot generation at project creation |
 | ADR-012 | Use Maven Wrapper 3.9.16 | Accepted | Makes builds reproducible without requiring a global Maven installation |
+| ADR-013 | Model event payloads as sealed, typed Java records | Accepted | Prevents arbitrary payload implementations and gives producers compile-time field types |
+| ADR-014 | Use Jackson 3 for the shared JSON contract | Accepted | Aligns with the preferred default JSON mapper in Spring Boot 4 |
+| ADR-015 | Validate contract invariants in record constructors | Accepted | Keeps Kafka-facing contracts valid without coupling the shared module to web validation |
 
 New material decisions should receive another ADR row or a dedicated ADR file
 if the reasoning is extensive.

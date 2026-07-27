@@ -302,11 +302,13 @@ components:
           minLength: 1
           maxLength: 100
         payload:
-          type: object
-          description: |
-            Event-specific JSON. Exact payload schemas will be finalized with
-            event-contract implementation.
-          additionalProperties: true
+          description: Event-specific data matching `eventType`.
+          oneOf:
+            - $ref: '#/components/schemas/OrderCreatedPayload'
+            - $ref: '#/components/schemas/PaymentCompletedPayload'
+            - $ref: '#/components/schemas/PaymentFailedPayload'
+            - $ref: '#/components/schemas/OrderCancelledPayload'
+            - $ref: '#/components/schemas/OrderShippedPayload'
     EventAcceptedResponse:
       type: object
       additionalProperties: false
@@ -374,8 +376,13 @@ components:
         status:
           $ref: '#/components/schemas/ProcessingStatus'
         payload:
-          type: object
-          additionalProperties: true
+          description: Event-specific data matching `eventType`.
+          oneOf:
+            - $ref: '#/components/schemas/OrderCreatedPayload'
+            - $ref: '#/components/schemas/PaymentCompletedPayload'
+            - $ref: '#/components/schemas/PaymentFailedPayload'
+            - $ref: '#/components/schemas/OrderCancelledPayload'
+            - $ref: '#/components/schemas/OrderShippedPayload'
         failure:
           allOf:
             - $ref: '#/components/schemas/FailureSummary'
@@ -477,6 +484,112 @@ components:
         - PAYMENT_FAILED
         - ORDER_CANCELLED
         - ORDER_SHIPPED
+    OrderCreatedPayload:
+      type: object
+      additionalProperties: true
+      required:
+        - customerReference
+        - currency
+        - totalAmount
+        - itemCount
+      properties:
+        customerReference:
+          $ref: '#/components/schemas/SafeIdentifier'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        totalAmount:
+          $ref: '#/components/schemas/PositiveMoney'
+        itemCount:
+          type: integer
+          minimum: 1
+    PaymentCompletedPayload:
+      type: object
+      additionalProperties: true
+      required:
+        - paymentReference
+        - amount
+        - currency
+        - completedAt
+      properties:
+        paymentReference:
+          $ref: '#/components/schemas/SafeIdentifier'
+        amount:
+          $ref: '#/components/schemas/PositiveMoney'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        completedAt:
+          type: string
+          format: date-time
+    PaymentFailedPayload:
+      type: object
+      additionalProperties: true
+      required:
+        - paymentReference
+        - failureReason
+        - failedAt
+      properties:
+        paymentReference:
+          $ref: '#/components/schemas/SafeIdentifier'
+        failureReason:
+          $ref: '#/components/schemas/PaymentFailureReason'
+        failedAt:
+          type: string
+          format: date-time
+    OrderCancelledPayload:
+      type: object
+      additionalProperties: true
+      required:
+        - reason
+        - cancelledAt
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 250
+        cancelledAt:
+          type: string
+          format: date-time
+    OrderShippedPayload:
+      type: object
+      additionalProperties: true
+      required:
+        - shipmentReference
+        - carrier
+        - shippedAt
+      properties:
+        shipmentReference:
+          $ref: '#/components/schemas/SafeIdentifier'
+        carrier:
+          type: string
+          minLength: 1
+          maxLength: 100
+        shippedAt:
+          type: string
+          format: date-time
+    PaymentFailureReason:
+      type: string
+      enum:
+        - DECLINED
+        - INSUFFICIENT_FUNDS
+        - EXPIRED_PAYMENT_METHOD
+        - PROCESSOR_UNAVAILABLE
+        - VALIDATION_ERROR
+        - UNKNOWN
+    SafeIdentifier:
+      type: string
+      minLength: 1
+      maxLength: 100
+      pattern: '^[A-Za-z0-9][A-Za-z0-9._-]*$'
+    CurrencyCode:
+      type: string
+      pattern: '^[A-Z]{3}$'
+      example: USD
+    PositiveMoney:
+      type: number
+      minimum: 0
+      exclusiveMinimum: true
+      multipleOf: 0.01
+      example: 149.99
     ProcessingStatus:
       type: string
       enum:
