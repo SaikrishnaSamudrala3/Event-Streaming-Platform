@@ -1,0 +1,45 @@
+# Maven build output
+target/
+**/target/
+
+# Application logs
+*.log
+logs/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Local data and generated infrastructure state
+data/
+volumes/
+prometheus-data/
+grafana-data/
+
+# IDE metadata
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Test and coverage reports
+coverage/
+*.exec
+
+# Temporary files
+*.tmp
+*.swp
+*~
