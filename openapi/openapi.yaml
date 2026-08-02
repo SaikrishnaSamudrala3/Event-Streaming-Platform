@@ -31,7 +31,6 @@ paths:
         event.
       operationId: submitOrderEvent
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
         - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
@@ -49,6 +48,7 @@ paths:
                   occurredAt: '2026-07-25T18:30:00Z'
                   source: demo-order-service
                   payload:
+                    customerReference: customer-200
                     currency: USD
                     totalAmount: 149.99
                     itemCount: 2
@@ -61,12 +61,6 @@ paths:
                 $ref: '#/components/schemas/EventAcceptedResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
-        '409':
-          description: The idempotency key conflicts with a different request.
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
         '413':
           description: Request payload is too large.
           content:
@@ -231,18 +225,6 @@ components:
       schema:
         type: string
         format: uuid
-    IdempotencyKey:
-      name: Idempotency-Key
-      in: header
-      required: false
-      description: |
-        Client-generated key used to safely recognize repeated submissions.
-        Final storage and expiration behavior will be defined during
-        implementation.
-      schema:
-        type: string
-        minLength: 8
-        maxLength: 128
     CorrelationId:
       name: X-Correlation-ID
       in: header

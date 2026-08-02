@@ -116,8 +116,12 @@ not an additive compatible change.
 - Redelivery with the same `eventId` must not create a second processed record.
 - Reusing one `eventId` for different content is invalid and should be
   observable as a contract violation.
-- HTTP clients may provide an `Idempotency-Key`; the final mapping between that
-  key and `eventId` will be decided during ingestion implementation.
+- The Ingestion Service generates a random UUID for every accepted submission.
+- The first release does not accept a client idempotency key. Correct conflict
+  detection requires a shared durable idempotency store; an in-memory map would
+  be incorrect across restarts or horizontally scaled service instances.
+- Client-controlled idempotency may be added later with durable request
+  fingerprint storage and an explicit expiration policy.
 
 ## 7. Time rules
 

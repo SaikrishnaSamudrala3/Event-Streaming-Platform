@@ -97,13 +97,17 @@ The initial platform has two separate consistency boundaries:
 - HTTP acceptance and Kafka publication
 - Kafka consumption and MySQL persistence
 
-A `202 Accepted` response means the ingestion service accepted the request for
-asynchronous publication; it does not mean downstream processing completed.
-The returned event ID is used to query eventual processing state.
+A `202 Accepted` response means Kafka acknowledged the record according to the
+configured producer acknowledgment policy before the bounded publication
+timeout. It does not mean downstream processing or MySQL persistence completed.
+The returned event ID is used to query eventual processing state. A producer
+failure or acknowledgment timeout returns `503 Service Unavailable` instead of
+claiming acceptance.
 
-Producer failure behavior and whether an HTTP response waits for broker
-acknowledgment will be decided and documented during Ingestion Service
-implementation.
+An acknowledgment timeout is an unknown outcome: the underlying Kafka send may
+still complete after the HTTP response. Until durable client idempotency is
+implemented, callers must not assume that a timed-out submission was absent or
+blindly retry it as if no record could have been published.
 
 ## 7. Database model
 
@@ -202,6 +206,8 @@ demonstration environment.
 | ADR-013 | Model event payloads as sealed, typed Java records | Accepted | Prevents arbitrary payload implementations and gives producers compile-time field types |
 | ADR-014 | Use Jackson 3 for the shared JSON contract | Accepted | Aligns with the preferred default JSON mapper in Spring Boot 4 |
 | ADR-015 | Validate contract invariants in record constructors | Accepted | Keeps Kafka-facing contracts valid without coupling the shared module to web validation |
+| ADR-016 | Wait for Kafka acknowledgment before returning HTTP 202 | Accepted | Prevents the API from claiming acceptance when publication has already failed or timed out |
+| ADR-017 | Defer client-provided idempotency keys | Accepted for first release | Correct conflict detection requires durable shared state across restarts and horizontally scaled instances |
 
 New material decisions should receive another ADR row or a dedicated ADR file
 if the reasoning is extensive.

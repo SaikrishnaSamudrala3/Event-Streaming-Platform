@@ -1,0 +1,29 @@
+server:
+  port: ${PORT:10000}
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    security:
+      protocol: SSL
+    ssl:
+      key-store-location: ${KAFKA_SSL_KEYSTORE_LOCATION}
+      key-store-password: ${KAFKA_SSL_KEYSTORE_PASSWORD}
+      key-store-type: PKCS12
+      trust-store-location: ${KAFKA_SSL_TRUSTSTORE_LOCATION}
+      trust-store-password: ${KAFKA_SSL_TRUSTSTORE_PASSWORD}
+      trust-store-type: JKS
+      key-password: ${KAFKA_SSL_KEY_PASSWORD}
+
+springdoc:
+  api-docs:
+    enabled: ${API_DOCUMENTATION_ENABLED:false}
+  swagger-ui:
+    enabled: ${API_DOCUMENTATION_ENABLED:false}
+    path: /swagger-ui.html
+
+ingestion:
+  kafka:
+    topic: ${KAFKA_ORDER_EVENTS_TOPIC}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
