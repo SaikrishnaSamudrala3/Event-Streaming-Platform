@@ -205,6 +205,8 @@ Exit criteria:
 
 ### Phase 3 — Ingestion Service
 
+Status: **Complete**
+
 Planned components:
 
 - application entry point
@@ -216,7 +218,20 @@ Planned components:
 - validation
 - global exception handling
 - configuration profiles
+- generated OpenAPI documentation and Swagger UI
 - unit and controller tests
+
+Implemented additions:
+
+- versioned `POST /api/v1/events` ingestion endpoint
+- typed request mapping to the shared event contract
+- Kafka publication keyed by `orderId`
+- broker-acknowledged `202 Accepted` workflow with a bounded timeout
+- standard problem-details responses for validation, publication, and routing failures
+- local, test, and cloud configuration profiles with environment-driven settings
+- explicit CORS allowlist configuration
+- generated OpenAPI and Swagger UI with environment-specific exposure
+- regression coverage for payload schemas and disabled documentation routes
 
 Exit criteria:
 

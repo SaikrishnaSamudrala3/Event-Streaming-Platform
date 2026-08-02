@@ -83,8 +83,10 @@ The implementation must match `openapi/openapi.yaml`:
 - error representation
 - pagination shape
 
-Contract drift is a defect. Automated OpenAPI validation can be introduced
-after the first endpoints exist.
+Contract drift is a defect. The Ingestion Service tests verify its generated
+OpenAPI operation, response statuses, request header, payload alternatives, and
+environment-specific documentation exposure. Broader repository-contract
+validation will expand as the later endpoints are implemented.
 
 ## 4. Benchmark questions
 

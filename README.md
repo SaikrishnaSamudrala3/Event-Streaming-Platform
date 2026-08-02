@@ -6,10 +6,10 @@ plan and API contract. Application code will be added incrementally.
 
 ## Project status
 
-**Current phase:** Phase 2 complete on `phase/02-common-event-contract`
+**Current phase:** Phase 3 complete on `phase/03-ingestion-service`
 
-Nothing in the OpenAPI document should be treated as implemented until the
-corresponding milestone is marked complete in the project plan.
+The Ingestion Service event-submission operation is implemented. Operations in
+the repository OpenAPI contract that belong to later phases remain planned.
 
 ## Build versions
 

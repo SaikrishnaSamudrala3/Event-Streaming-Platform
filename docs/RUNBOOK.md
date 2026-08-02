@@ -24,6 +24,67 @@ Free-tier services may sleep or power off after inactivity. The live demo may
 experience cold starts and should not be described as continuously available
 production infrastructure.
 
+### Ingestion Service profiles
+
+The Ingestion Service uses `local` when no profile is selected.
+
+| Profile | Purpose | Configuration behavior |
+|---|---|---|
+| `local` | Local development | Uses safe defaults that environment variables can override |
+| `cloud` | Hosted deployment | Requires topic and CORS values from the environment |
+| `test` | Automated tests | Uses deterministic values from test resources |
+
+Select a non-default profile with `SPRING_PROFILES_ACTIVE`. The settings
+implemented so far are:
+
+| Environment variable | Typed property | Local default | Cloud |
+|---|---|---|---|
+| `INGESTION_SERVER_PORT` / `PORT` | `server.port` | `INGESTION_SERVER_PORT`, default `8080` | Render `PORT`, default `10000` |
+| `KAFKA_ORDER_EVENTS_TOPIC` | `ingestion.kafka.topic` | `order.events.v1` | Required |
+| `CORS_ALLOWED_ORIGINS` | `ingestion.cors.allowed-origins` | `http://localhost:3000,http://localhost:5173` | Required |
+
+`CORS_ALLOWED_ORIGINS` is a comma-separated list. These origins are typed and
+validated, and the HTTP API enforces the resulting allowlist.
+
+### Ingestion Kafka producer
+
+The local profile connects to `KAFKA_BOOTSTRAP_SERVERS`, defaulting to
+`localhost:9092`, with `KAFKA_SECURITY_PROTOCOL`, defaulting to `PLAINTEXT`.
+The cloud profile requires `KAFKA_BOOTSTRAP_SERVERS` and uses TLS client
+authentication with the following variables:
+
+- `KAFKA_SSL_KEYSTORE_LOCATION`
+- `KAFKA_SSL_KEYSTORE_PASSWORD`
+- `KAFKA_SSL_KEY_PASSWORD`
+- `KAFKA_SSL_TRUSTSTORE_LOCATION`
+- `KAFKA_SSL_TRUSTSTORE_PASSWORD`
+
+Store locations must be Spring resource URLs such as
+`file:/absolute/path/client.keystore.p12`. The cloud profile expects a PKCS12
+keystore and a JKS truststore. Neither the store files nor their passwords
+belong in source control.
+
+The producer uses string keys, JSON values, `acks=all`, and Kafka producer
+idempotence. JSON type headers are disabled because the shared event envelope
+contains its explicit event type and consumers should not depend on Java class
+names. Producer idempotence protects against duplicate records caused by
+producer retries within one producer session; it is not an end-to-end
+exactly-once guarantee.
+
+The Ingestion Service waits up to `KAFKA_PUBLISH_TIMEOUT`, defaulting to `5s`,
+for Kafka to acknowledge a publication. Acknowledgment produces `202 Accepted`;
+a failure or timeout produces `503 Service Unavailable`. This wait does not
+include downstream consumption or database persistence.
+
+A timeout does not prove that Kafka rejected the record. The asynchronous send
+may complete after the HTTP timeout, so the outcome is unknown. Investigate by
+correlation ID and producer logs; do not blindly retry until durable client
+idempotency is implemented.
+
+The first release generates a new event UUID for every submission and does not
+accept `Idempotency-Key`. Supporting that header correctly requires durable,
+shared request-fingerprint storage across service instances and restarts.
+
 ## 2. Configuration checklist
 
 Before starting a service, verify:
@@ -181,12 +242,30 @@ Check:
 
 ### Swagger UI or OpenAPI is unavailable
 
+For the Ingestion Service, runtime API documentation is available at these
+paths when documentation is enabled:
+
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+- OpenAPI YAML: `http://localhost:8080/v3/api-docs.yaml`
+
+The `local` profile enables these endpoints. The `cloud` profile disables them
+by default to avoid exposing implementation details unnecessarily. Set
+`API_DOCUMENTATION_ENABLED=true` in the cloud environment only when public API
+documentation is intentionally required.
+
+The generated document describes the endpoints currently implemented by the
+running service. The repository file at `openapi/openapi.yaml` remains the
+broader design contract for the complete platform, including operations that
+belong to later phases.
+
 Check:
 
-- documentation dependency and configuration
-- environment-specific enablement
+- that the service is running with the expected Spring profile
+- `API_DOCUMENTATION_ENABLED` in cloud environments
 - proxy path handling
-- whether only the repository contract exists at the current project phase
+- whether the requested operation is implemented in the running service or is
+  only present in the broader repository contract
 
 ## 6. Failure-response discipline
 
