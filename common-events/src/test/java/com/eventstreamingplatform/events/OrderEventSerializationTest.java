@@ -83,6 +83,23 @@ class OrderEventSerializationTest {
         assertFalse(json.get("payload").has("eventType"));
     }
 
+    @Test
+    void shouldDeserializeTheRawEnvelopeTypeUsedByKafka() throws Exception {
+        OrderEvent<OrderCreatedPayload> original = EventTestFixtures.event(
+                new OrderCreatedPayload(
+                        "customer-200",
+                        "USD",
+                        new BigDecimal("149.99"),
+                        2));
+
+        String json = JSON_MAPPER.writeValueAsString(original);
+        OrderEvent<?> restored = JSON_MAPPER.readValue(json, OrderEvent.class);
+
+        assertEquals(original, restored);
+        assertTrue(restored.payload() instanceof OrderCreatedPayload);
+        assertFalse(JSON_MAPPER.readTree(json).get("payload").has("eventType"));
+    }
+
     private static Stream<Arguments> payloads() {
         return Stream.of(
                 Arguments.of(

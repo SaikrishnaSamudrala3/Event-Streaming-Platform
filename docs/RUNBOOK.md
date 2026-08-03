@@ -85,6 +85,60 @@ The first release generates a new event UUID for every submission and does not
 accept `Idempotency-Key`. Supporting that header correctly requires durable,
 shared request-fingerprint storage across service instances and restarts.
 
+### Processing Service profiles
+
+The Processing Service also defaults to the `local` profile. Its local profile
+optionally imports the ignored root `.env` as a properties file, allowing a
+service started from the repository root to reuse the Docker MySQL credentials
+without copying them into tracked YAML.
+
+| Environment variable | Purpose | Local default |
+|---|---|---|
+| `KAFKA_BOOTSTRAP_SERVERS` | Kafka broker addresses | `localhost:9092` |
+| `KAFKA_ORDER_EVENTS_TOPIC` | Source topic | `order.events.v1` |
+| `KAFKA_PROCESSING_CONSUMER_GROUP` | Consumer group | `order-processing-v1` |
+| `KAFKA_CONSUMER_CONCURRENCY` | Listener concurrency | `3` |
+| `MYSQL_JDBC_URL` | Complete JDBC connection URL | Derived from host, port, and database |
+| `MYSQL_HOST` | Local MySQL hostname | `localhost` |
+| `MYSQL_PORT` | Local MySQL port | `3306` |
+| `MYSQL_DATABASE` | Application database | `event_streaming` |
+| `MYSQL_USERNAME` | Application database user | `event_app` |
+| `MYSQL_PASSWORD` | Application database password | Required from `.env` |
+
+The cloud profile requires an injected JDBC URL, database credentials, Kafka
+addresses, topic, consumer group, and Kafka TLS stores. The test profile uses
+an in-memory database, disables Flyway and listener startup, and contains no
+real credentials or external connections.
+
+Kafka automatic offset commits are disabled. New consumer groups start at the
+earliest available record, values deserialize into the shared `OrderEvent`
+contract without Java type headers, and listener acknowledgment mode is
+`MANUAL_IMMEDIATE`. The listener acknowledges after transactional processing
+returns either `PROCESSED` or the idempotent `DUPLICATE` outcome. If mapping or
+database processing throws an exception, the listener does not acknowledge the
+record. Retry and dead-letter recovery are added in the reliability phase.
+
+### Processing database migrations
+
+The Processing Service uses Flyway through the Spring Boot Flyway starter.
+Flyway validates and applies migrations before JPA initializes. The first
+migration is `V1__create_processed_events.sql`; it creates `processed_events`
+and Flyway's own `flyway_schema_history` table.
+
+Never edit a migration after it has been applied to a shared environment.
+Flyway records its checksum and will reject unexpected changes. Add a new
+versioned migration such as `V2__describe_the_change.sql` instead. Hibernate is
+configured with `ddl-auto: validate`, so Flyway—not Hibernate—owns schema
+creation and evolution.
+
+Inspect local migration history without exposing a password:
+
+```bash
+docker compose exec -T mysql sh -c \
+  'MYSQL_PWD="$MYSQL_PASSWORD" mysql --user="$MYSQL_USER" \
+  --database="$MYSQL_DATABASE" --execute="SELECT version, description, success FROM flyway_schema_history"'
+```
+
 ## 2. Configuration checklist
 
 Before starting a service, verify:
@@ -132,9 +186,10 @@ Run the repeatable infrastructure verification:
 ```
 
 The script validates Compose, waits for healthy dependencies, verifies both
-topics, produces and consumes a uniquely labelled local smoke record, and
-connects to MySQL as the limited application user. Smoke records remain only in
-the local Kafka data volume.
+topics, produces and consumes a uniquely identified valid `OrderEvent`, and
+connects to MySQL as the limited application user. Using the real event contract
+prevents infrastructure checks from placing poison records on the application
+topic. Smoke records remain only in the local Kafka data volume.
 
 Inspect current state and logs:
 
@@ -172,6 +227,11 @@ mounted at `/tmp/kafka-logs` for the official Apache Kafka image. MySQL data is
 stored in `event-streaming-platform-mysql-data`, mounted at `/var/lib/mysql`.
 These exact container paths matter: mounting a volume somewhere the image does
 not write does not provide persistence.
+
+The one-shot `kafka-storage-init` service runs as root only long enough to make
+a new Kafka volume writable by the broker image's UID and GID `1000`. The Kafka
+broker itself continues to run as its non-root image user. An `Exited (0)` state
+for this initializer is expected.
 
 Recreate containers from the preserved data:
 

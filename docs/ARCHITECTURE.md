@@ -52,6 +52,13 @@ The initial guarantee is **at-least-once processing**:
 4. Offsets are acknowledged only according to the selected error-handling
    strategy.
 
+The processing service checks both `eventId` and the Kafka
+topic/partition/offset before inserting. The checks make normal redelivery
+inexpensive, while database unique constraints remain the authoritative guard
+against concurrent inserts. Event mapping and persistence run in one database
+transaction. Persistence exceptions are not swallowed, allowing the Kafka
+listener to avoid acknowledging unsuccessful processing.
+
 The project will not claim exactly-once behavior across Kafka and MySQL.
 
 ## 4. Partitioning and ordering
@@ -131,9 +138,19 @@ The processed-event record is expected to contain:
 - payload representation
 - failure details where safe and appropriate
 
-Payload storage format will be chosen during persistence design. The decision
-must balance ease of inspection, indexing needs, and portability on Aiven
-MySQL.
+Payloads are stored in a native MySQL `JSON` column while envelope fields remain
+normal relational columns. This preserves event-specific payload structure and
+lets MySQL validate that stored payload text is JSON without forcing every
+payload variant into nullable columns. Frequently filtered envelope fields are
+indexed directly; JSON-path indexes are deferred until a demonstrated query
+requires one.
+
+Event UUIDs use `CHAR(36)` rather than binary storage in the first version. The
+text representation costs more space but is easier to inspect during learning,
+debugging, and portfolio demonstrations. Kafka topic, partition, and offset are
+also stored and uniquely constrained so one broker record cannot create two
+rows. `DATETIME(6)` preserves microsecond precision; the application and JDBC
+session are responsible for using UTC because MySQL `DATETIME` has no timezone.
 
 ## 8. Observability
 

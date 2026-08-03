@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: ${MYSQL_JDBC_URL}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    security:
+      protocol: SSL
+    ssl:
+      key-store-location: ${KAFKA_SSL_KEYSTORE_LOCATION}
+      key-store-password: ${KAFKA_SSL_KEYSTORE_PASSWORD}
+      key-store-type: PKCS12
+      trust-store-location: ${KAFKA_SSL_TRUSTSTORE_LOCATION}
+      trust-store-password: ${KAFKA_SSL_TRUSTSTORE_PASSWORD}
+      trust-store-type: JKS
+      key-password: ${KAFKA_SSL_KEY_PASSWORD}
+
+processing:
+  kafka:
+    topic: ${KAFKA_ORDER_EVENTS_TOPIC}
+    consumer-group: ${KAFKA_PROCESSING_CONSUMER_GROUP}

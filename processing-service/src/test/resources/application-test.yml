@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:processing;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: none
+  kafka:
+    bootstrap-servers: localhost:19092
+    listener:
+      auto-startup: false
+
+processing:
+  kafka:
+    topic: test.order.events.v1
+    consumer-group: test-order-processing
+    concurrency: 1

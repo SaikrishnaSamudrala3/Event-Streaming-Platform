@@ -1,9 +1,25 @@
 name: event-streaming-platform
 
 services:
+  kafka-storage-init:
+    image: apache/kafka:4.2.0
+    user: "0:0"
+    entrypoint:
+      - /bin/sh
+      - -c
+    command:
+      - chown -R 1000:1000 /tmp/kafka-logs
+    volumes:
+      - kafka-data:/tmp/kafka-logs
+    networks:
+      - platform-network
+
   kafka:
     image: apache/kafka:4.2.0
     hostname: kafka
+    depends_on:
+      kafka-storage-init:
+        condition: service_completed_successfully
     ports:
       - "${KAFKA_HOST_PORT:-9092}:9092"
     environment:

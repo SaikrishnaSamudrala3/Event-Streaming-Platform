@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: processing-service
+  profiles:
+    default: local
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  kafka:
+    consumer:
+      group-id: ${processing.kafka.consumer-group}
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        "[spring.json.trusted.packages]": com.eventstreamingplatform.events
+        "[spring.json.value.default.type]": com.eventstreamingplatform.events.OrderEvent
+        "[spring.json.use.type.headers]": false
+    listener:
+      ack-mode: manual_immediate
+      concurrency: ${processing.kafka.concurrency}
+
+processing:
+  kafka:
+    concurrency: ${KAFKA_CONSUMER_CONCURRENCY:3}

@@ -1,15 +1,16 @@
 # Real-Time Event Streaming Platform
 
 A portfolio-oriented event streaming platform built around Java, Spring Boot,
-Apache Kafka, Maven, and MySQL. The repository currently contains the project
-plan and API contract. Application code will be added incrementally.
+Apache Kafka, Maven, and MySQL. It currently supports HTTP event ingestion,
+Kafka publication, transactional consumption, and MySQL persistence.
 
 ## Project status
 
-**Current phase:** Phase 4 complete on `phase/04-local-infrastructure`
+**Current phase:** Phase 5 complete on `phase/05-processing-service`
 
-The Ingestion Service event-submission operation is implemented. Operations in
-the repository OpenAPI contract that belong to later phases remain planned.
+The Ingestion and Processing Service workflows are implemented. Query,
+reliability, observability, and deployment capabilities remain planned for
+later phases.
 
 ## Build versions
 

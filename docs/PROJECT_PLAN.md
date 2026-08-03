@@ -272,6 +272,8 @@ Exit criteria:
 
 ### Phase 5 — Processing Service
 
+Status: **Complete**
+
 Planned components:
 
 - application entry point
@@ -284,10 +286,15 @@ Planned components:
 
 Exit criteria:
 
-- Published events are consumed.
-- Successfully processed events are stored in MySQL.
-- Event ID uniqueness prevents duplicate rows.
-- Offset acknowledgment behavior is tested.
+- [x] Published events are consumed.
+- [x] Successfully processed events are stored in MySQL.
+- [x] Event ID uniqueness prevents duplicate rows.
+- [x] Offset acknowledgment behavior is tested.
+
+Completion verification used the real local Kafka and MySQL services. A newly
+published HTTP event was persisted with its Kafka coordinates, an exact Kafka
+redelivery returned `DUPLICATE` without adding a row, the committed offset
+advanced, and a consumer restart resumed from that committed offset.
 
 ### Phase 6 — Query API
 
@@ -425,6 +432,11 @@ Rules:
 - Database credentials come from environment configuration.
 - Indexes will be added based on query paths: event ID, order ID, type,
   processing status, and received timestamp.
+- Event payloads use native MySQL JSON storage while queryable envelope fields
+  remain relational columns.
+- Kafka topic, partition, and offset form a unique source-position constraint.
+- Event and processing timestamps use microsecond-precision `DATETIME(6)` and
+  are written as UTC by the application.
 
 ## 10. Configuration and secrets
 
