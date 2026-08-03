@@ -242,6 +242,8 @@ Exit criteria:
 
 ### Phase 4 — Local infrastructure
 
+Status: **Complete**
+
 Planned components:
 
 - Kafka service
@@ -249,6 +251,18 @@ Planned components:
 - named volumes where appropriate
 - health checks
 - documented environment variables
+
+Implemented additions:
+
+- pinned single-node Apache Kafka 4.2.0 broker in KRaft mode
+- pinned MySQL 8.4 database with a limited application user
+- separate host and container Kafka listeners
+- health checks for Kafka and MySQL
+- idempotent creation of the main and dead-letter topics
+- three partitions per topic with replication factor one for local development
+- named Kafka and MySQL data volumes with verified persistence
+- repeatable Kafka and MySQL infrastructure verification script
+- documented startup, inspection, restart, cleanup, and troubleshooting commands
 
 Exit criteria:
 

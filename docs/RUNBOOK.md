@@ -103,6 +103,110 @@ Before starting a service, verify:
 
 ## 3. Startup order
 
+### Start local infrastructure
+
+From the repository root, create the private environment file once:
+
+```bash
+cp .env.example .env
+```
+
+Replace the two MySQL password placeholders in `.env`. The file is ignored by
+Git and must remain in the repository root beside `compose.yaml`.
+
+Start Kafka and MySQL, wait for their health checks, and create the required
+topics:
+
+```bash
+docker compose up -d --wait kafka mysql
+docker compose run --rm kafka-init
+```
+
+The `kafka-init` service is a one-shot initializer. An `Exited (0)` state means
+it completed successfully; it is not expected to remain running.
+
+Run the repeatable infrastructure verification:
+
+```bash
+./scripts/verify-local-infrastructure.sh
+```
+
+The script validates Compose, waits for healthy dependencies, verifies both
+topics, produces and consumes a uniquely labelled local smoke record, and
+connects to MySQL as the limited application user. Smoke records remain only in
+the local Kafka data volume.
+
+Inspect current state and logs:
+
+```bash
+docker compose ps --all
+docker compose logs kafka
+docker compose logs mysql
+```
+
+Use `docker compose logs -f <service>` to follow logs and `Ctrl+C` to stop
+following them without stopping the container.
+
+### Stop, restart, and remove local infrastructure
+
+Stop containers while keeping them available:
+
+```bash
+docker compose stop
+```
+
+Restart stopped containers:
+
+```bash
+docker compose start
+```
+
+Remove containers and the project network while preserving named-volume data:
+
+```bash
+docker compose down
+```
+
+Kafka data is stored in the `event-streaming-platform-kafka-data` volume,
+mounted at `/tmp/kafka-logs` for the official Apache Kafka image. MySQL data is
+stored in `event-streaming-platform-mysql-data`, mounted at `/var/lib/mysql`.
+These exact container paths matter: mounting a volume somewhere the image does
+not write does not provide persistence.
+
+Recreate containers from the preserved data:
+
+```bash
+docker compose up -d --wait kafka mysql
+docker compose run --rm kafka-init
+```
+
+The following command is destructive and should be used only for an intentional
+full local reset:
+
+```bash
+docker compose down --volumes
+```
+
+It permanently deletes the project Kafka and MySQL named volumes. MySQL will
+then initialize again from the current `.env` passwords, and Kafka topics and
+records must be recreated.
+
+Persistence has been verified by writing Kafka and MySQL markers, running
+ordinary `docker compose down`, recreating the containers, and reading both
+markers before any data initialization. Use that same procedure after changing
+images or storage paths.
+
+### Local connection addresses
+
+| Client location | Kafka | MySQL |
+|---|---|---|
+| Host applications | `localhost:9092` | `localhost:3306` |
+| Compose containers | `kafka:29092` | `mysql:3306` |
+
+The host-side MySQL JDBC URL is
+`jdbc:mysql://localhost:3306/event_streaming`. Kafka and MySQL ports are
+protocol endpoints, not web pages.
+
 Recommended local order:
 
 1. Start Kafka and MySQL.

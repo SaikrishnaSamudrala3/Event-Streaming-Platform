@@ -6,7 +6,7 @@ plan and API contract. Application code will be added incrementally.
 
 ## Project status
 
-**Current phase:** Phase 3 complete on `phase/03-ingestion-service`
+**Current phase:** Phase 4 complete on `phase/04-local-infrastructure`
 
 The Ingestion Service event-submission operation is implemented. Operations in
 the repository OpenAPI contract that belong to later phases remain planned.
