@@ -66,8 +66,12 @@ Consequences:
 - hot order IDs can create uneven partition load
 - consumers in one group cannot actively exceed the topic partition count
 
-The initial partition count will be selected during local infrastructure work,
-then documented with the reason and benchmark implications.
+The initial main and dead-letter topics each use three partitions. This allows
+up to three active consumers in one group and demonstrates cross-order
+parallelism without making the single-broker local environment unnecessarily
+heavy. Increasing consumer instances beyond the partition count will leave the
+additional instances idle. Benchmark results must always record the partition
+count because changing it changes the available parallelism.
 
 ## 5. Reliability flow
 
