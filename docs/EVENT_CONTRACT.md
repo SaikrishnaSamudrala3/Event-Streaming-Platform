@@ -36,6 +36,11 @@ Constraints in the OpenAPI document apply to HTTP ingestion. Kafka consumers
 must also validate messages because Kafka records may originate outside that
 endpoint.
 
+`eventType` is also the payload discriminator. Consumers use its value to map
+`payload` to the matching concrete payload record. No Java class name or
+additional type field is written into `payload`; this keeps the Kafka JSON
+language-neutral and consistent with the documented envelope.
+
 ## 4. Event types
 
 ### `ORDER_CREATED`

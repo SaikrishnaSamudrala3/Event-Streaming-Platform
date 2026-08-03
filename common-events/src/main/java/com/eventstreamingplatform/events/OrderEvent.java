@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * Immutable envelope for an order lifecycle event.
@@ -29,6 +31,27 @@ public record OrderEvent<P extends OrderEventPayload>(
         Instant occurredAt,
         String source,
         String correlationId,
+        @JsonTypeInfo(
+                use = JsonTypeInfo.Id.NAME,
+                include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
+                property = "eventType")
+        @JsonSubTypes({
+                @JsonSubTypes.Type(
+                        value = OrderCreatedPayload.class,
+                        name = "ORDER_CREATED"),
+                @JsonSubTypes.Type(
+                        value = PaymentCompletedPayload.class,
+                        name = "PAYMENT_COMPLETED"),
+                @JsonSubTypes.Type(
+                        value = PaymentFailedPayload.class,
+                        name = "PAYMENT_FAILED"),
+                @JsonSubTypes.Type(
+                        value = OrderCancelledPayload.class,
+                        name = "ORDER_CANCELLED"),
+                @JsonSubTypes.Type(
+                        value = OrderShippedPayload.class,
+                        name = "ORDER_SHIPPED")
+        })
         P payload) {
 
     public OrderEvent {

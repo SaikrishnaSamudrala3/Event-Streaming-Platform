@@ -63,10 +63,13 @@ verify_topic() {
 verify_topic "$main_topic"
 verify_topic "$dlt_topic"
 
-smoke_id="phase4-smoke-$(date +%s)"
-smoke_record="$smoke_id:{\"check\":\"kafka-connectivity\",\"result\":\"ok\"}"
+smoke_sequence="$(date +%s)"
+smoke_event_id="$(uuidgen | tr '[:upper:]' '[:lower:]')"
+smoke_order_id="infrastructure-smoke-$smoke_sequence"
+smoke_timestamp="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+smoke_record="$smoke_order_id:{\"eventId\":\"$smoke_event_id\",\"eventType\":\"ORDER_CREATED\",\"eventVersion\":1,\"orderId\":\"$smoke_order_id\",\"occurredAt\":\"$smoke_timestamp\",\"source\":\"local-infrastructure-verification\",\"correlationId\":\"$smoke_event_id\",\"payload\":{\"customerReference\":\"smoke-customer-$smoke_sequence\",\"currency\":\"USD\",\"totalAmount\":1.00,\"itemCount\":1}}"
 
-echo "Producing and consuming Kafka smoke record $smoke_id..."
+echo "Producing and consuming valid OrderEvent $smoke_event_id..."
 printf '%s\n' "$smoke_record" | docker compose exec -T kafka \
     /opt/kafka/bin/kafka-console-producer.sh \
     --bootstrap-server localhost:9092 \
@@ -83,7 +86,7 @@ docker compose exec -T kafka sh -c '
         --formatter-property print.key=true \
         --formatter-property key.separator=: 2>/dev/null \
         | grep -F -m 1 "$2" >/dev/null
-' shell "$main_topic" "$smoke_id"
+' shell "$main_topic" "$smoke_event_id"
 
 echo "Verifying MySQL application-user connectivity..."
 docker compose exec -T mysql sh -c '

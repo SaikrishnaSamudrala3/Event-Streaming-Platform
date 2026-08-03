@@ -1,0 +1,16 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${MYSQL_JDBC_URL:jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:event_streaming}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${MYSQL_USERNAME:event_app}
+    password: ${MYSQL_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    security:
+      protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+
+processing:
+  kafka:
+    topic: ${KAFKA_ORDER_EVENTS_TOPIC:order.events.v1}
+    consumer-group: ${KAFKA_PROCESSING_CONSUMER_GROUP:order-processing-v1}

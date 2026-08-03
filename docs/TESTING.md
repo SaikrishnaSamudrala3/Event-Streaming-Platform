@@ -72,6 +72,21 @@
 Testcontainers will be considered for Kafka and MySQL integration tests once
 the basic services are working.
 
+### Phase 5 verification completed
+
+- The repository unit and application-context suites cover event mapping,
+  persistence decisions, duplicate outcomes, and listener acknowledgment.
+- A real local end-to-end check covered HTTP ingestion, Kafka publication,
+  transactional consumption, and MySQL persistence.
+- Republishing the exact event advanced the consumer-group offset while the
+  event-ID row count remained one.
+- Restarting the consumer resumed at the committed offset without replaying
+  the acknowledged records.
+
+Repeatable container-managed integration tests remain planned. They should use
+isolated topics, consumer groups, and database state so normal local data does
+not influence their results.
+
 ## 3. API contract testing
 
 The implementation must match `openapi/openapi.yaml`:
